@@ -9,4 +9,4 @@ You can set the home directory of the script by changing the define for HOME_DIR
 
 You can set the base directory of the script by changing the define for BASE_DIR. Only files and directories in the base directory can be deleted.
 
-<img src="screenshot1.gif" alt="List of files with byteusage">
+<img src="screenshot1.png" alt="List of files with byteusage">
