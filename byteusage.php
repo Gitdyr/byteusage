@@ -39,6 +39,9 @@ $homeDirs = array(
 );
 
 
+@include(dirname(__FILE__).'/byteusage.inc.php');
+
+
 function AddTag($str, $tag = '', $class = '')
 {
     if (!$tag) {
@@ -155,7 +158,7 @@ function ListDir($dir)
         printf("Can't list %s\n", $dir);
         $entries = array();
     }
-    $out = AddTag($dir, 'h2');
+    $header = AddTag($dir, 'h2');
     $dirs = array();
     $files = array();
     $rows = array(
@@ -239,33 +242,35 @@ function ListDir($dir)
         $cells[] = AddAttr($cellStr, 'class', 'right');
         if ($entry == '..') {
             $button = '';
-            $input = '';
         } else {
             $button = AddTag('Delete', 'button', 'btn');
             $button = AddAttr($button, 'value', $fentry);
             $button = AddAttr($button, 'name', 'delete');
-            $input = AddTag('input');
-            $input = AddAttr($input, 'type', 'hidden');
-            $input = AddAttr($input, 'value', $dir);
-            $input = AddAttr($input, 'name', 'cdir');
         }
-        $cells[] = AddTag($button.$input, 'td');
+        $cells[] = AddTag($button, 'td');
         $rows[] = AddTag($cells, 'tr');
     }
     $table = AddTag($rows, 'table');
 
     $button = AddTag('Refresh', 'button'); 
-    $table .= AddTag('br').$button;
+    $buttons = $button;
 
     foreach ($homeDirs as $name => $homeDir) {
         $button = AddTag($name, 'button'); 
         $button = AddAttr($button, 'value', $homeDir);
         $button = AddAttr($button, 'name', 'hdir');
-        $table .= ' '.$button;
+        $buttons .= ' '.$button;
     }
 
-    $form = AddTag($table, 'form');
-    $out .= AddAttr($form, 'method', 'post');
+    $input = AddTag('input');
+    $input = AddAttr($input, 'type', 'hidden');
+    $input = AddAttr($input, 'value', $dir);
+    $input = AddAttr($input, 'name', 'cdir');
+
+    $out = $buttons.$header.$table.$input;
+
+    $form = AddTag($out, 'form');
+    $out = AddAttr($form, 'method', 'post');
     return $out;
 }
 
@@ -273,6 +278,11 @@ function ListDir($dir)
 foreach ($homeDirs as $name => &$homeDir) {
     $homeDir = realpath($homeDir);
 }
+
+
+print '<!-- ';
+var_dump($_POST);
+print ' -->';
 
 
 if (isset($_POST['delete'])) {
