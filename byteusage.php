@@ -32,6 +32,13 @@
 
 <?php
 
+// Here you can list the relevant directories
+$homeDirs = array(
+    'Home' => '.',
+    'Base' => '..',
+);
+
+
 function AddTag($str, $tag = '', $class = '')
 {
     if (!$tag) {
@@ -55,6 +62,18 @@ function AddAttr($str, $attr, $val)
         $str = substr_replace($str, $replace, $pos, 1);
     }
     return $str;
+}
+
+
+function CheckDir($dir)
+{
+    global $homeDirs;
+    foreach ($homeDirs as $name => $homeDir) {
+        if (substr($dir, 0, strlen($homeDir)) == $homeDir) {
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -88,8 +107,9 @@ function GetDirectorySize($dir)
 
 function RemoveDir($dir)
 {
-    if (substr($dir, 0, strlen(BASE_DIR)) != BASE_DIR) {
-        printf("Directory %s not within %s\n", $dir, BASE_DIR);
+    if (CheckDir($dir) == false) {
+        global $homeDirs;
+        printf("Directory %s not within %s\n", $dir, implode(', ',$homeDirs));
         return;
     }
 
@@ -123,8 +143,13 @@ function RemoveDir($dir)
 
 function ListDir($dir)
 {
-    global $count;
+    global $homeDirs;
     $dir = realpath($dir);
+    if (CheckDir($dir) == false) {
+        global $homeDirs;
+        printf("Directory %s not within %s\n", $dir, implode(', ',$homeDirs));
+        return;
+    }
     $entries = scandir($dir);
     if ($entries === false) {
         printf("Can't list %s\n", $dir);
@@ -190,6 +215,9 @@ function ListDir($dir)
             if (!$value) {
                 $value = '/';
             }
+            if (CheckDir($value) == false) {
+                continue;
+            }
             $button = AddTag($entry, 'button', 'btn');
             $button = AddAttr($button, 'name', 'dir');
             $button = AddAttr($button, 'value', $value);
@@ -209,7 +237,7 @@ function ListDir($dir)
         $cells[] = AddAttr($cellStr, 'class', 'right');
         $cellStr = AddTag($sizes->directories, 'td');
         $cells[] = AddAttr($cellStr, 'class', 'right');
-        if ($entry == '..' || substr($dir, 0, strlen(BASE_DIR)) != BASE_DIR) {
+        if ($entry == '..') {
             $button = '';
             $input = '';
         } else {
@@ -229,14 +257,9 @@ function ListDir($dir)
     $button = AddTag('Refresh', 'button'); 
     $table .= AddTag('br').$button;
 
-    $button = AddTag('Home', 'button'); 
-    $button = AddAttr($button, 'value', HOME_DIR);
-    $button = AddAttr($button, 'name', 'hdir');
-    $table .= ' '.$button;
-
-    if (BASE_DIR != HOME_DIR) {
-        $button = AddTag('Base', 'button'); 
-        $button = AddAttr($button, 'value', BASE_DIR);
+    foreach ($homeDirs as $name => $homeDir) {
+        $button = AddTag($name, 'button'); 
+        $button = AddAttr($button, 'value', $homeDir);
         $button = AddAttr($button, 'name', 'hdir');
         $table .= ' '.$button;
     }
@@ -246,15 +269,18 @@ function ListDir($dir)
     return $out;
 }
 
-define('BASE_DIR', realpath('..'));
-define('HOME_DIR', '.');
+
+foreach ($homeDirs as $name => &$homeDir) {
+    $homeDir = realpath($homeDir);
+}
+
 
 if (isset($_POST['delete'])) {
     $delete = realpath($_POST['delete']);
     RemoveDir($delete);
 }
 
-$dir = HOME_DIR;
+$dir = reset($homeDirs);
 if (isset($_POST['cdir'])) {
     $dir = $_POST['cdir'];
 }
